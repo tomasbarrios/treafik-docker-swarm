@@ -1,0 +1,116 @@
+version: '3.7'
+
+networks:
+  proxy:
+    driver: overlay
+    attachable: true
+    name: proxy
+
+services:
+  reverse-proxy:
+    # The official v2 Traefik docker image
+    image: traefik:v2.9
+    # Enables the web UI and tells Traefik to listen to docker
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+      # - "8080:8080"
+      - "443:443"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./letsencrypt:/letsencrypt
+    command: 
+      - --api.insecure=true 
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      # - "--entrypoints.websecure.address=:443"
+      # - "--certificatesresolvers.le.acme.tlschallenge=true"
+      - --api.dashboard=true
+      - --serversTransport.insecureSkipVerify=true
+      - --api.debug=true
+      - --providers.docker.swarmMode=true
+      # - --providers.docker.network=proxy
+      - --providers.docker.exposedByDefault=true
+      - "--providers.docker.defaultRule=Host(`{{ normalize .Name }}.ooo.digitalcraft.cl`)"
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecured.address=:443
+      - --entrypoints.web.http.redirections.entryPoint.to=websecured
+      - "--certificatesresolvers.le.acme.dnschallenge=true"
+      - "--certificatesresolvers.le.acme.httpChallenge=false"
+      - "--certificatesresolvers.le.acme.tlsChallenge=false"
+      # - "--certificatesresolvers.le.acme.email=tomasbarrios@gmail.com"
+      # - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
+
+      - "--log.level=DEBUG"
+      # - "--certificatesresolvers.le.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+
+      - "--certificatesresolvers.le.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.le.acme.email=info@digitalcraft.cl"
+      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.le.acme.httpChallenge.entryPoint=web"
+
+      # - "--api.insecure=true"
+      # - "--providers.docker=true"
+      # - "--providers.docker.exposedbydefault=false"
+      # - "--entrypoints.websecure.address=:443"
+      # - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      # - "--certificatesresolvers.myresolver.acme.email=postmaster@example.com"
+      # - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+
+
+    env_file: ./traefik.env
+    # environment:
+    #   # - "AWS_ACCESS_KEY_ID=yourKeyGoesHere"
+    #   # - "AWS_SECRET_ACCESS_KEY=yourSecretGoesHere"
+    #   # CF_API_EMAIL, CF_API_KEY 5 
+    #   # -"CF_ZONE_API_TOKEN"="pS-kz7Ph5SwDLtO5-HIfMvs5CRqBm8SyF8hqKfVd"
+    #    - "CF_DNS_API_TOKEN=tGw3w0m7-O4FTJLwojayJJltZdMJOayTwDwMl_gy"
+    #   # or CF_DNS_API_TOKEN, [CF_ZON
+    networks: 
+      - proxy
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.http.routers.traefik.rule=Host(`traefik.ooo.digitalcraft.cl`)'
+        - 'traefik.http.routers.traefik.tls=true'
+        - 'traefik.http.routers.traefik.tls.certresolver=le'
+        - 'traefik.http.routers.traefik.service=api@internal'
+        - 'traefik.http.services.api.loadbalancer.server.port=8080'
+        - 'traefik.http.routers.traefik.tls.domains[0].main=ooo.digitalcraft.cl'
+        - 'traefik.http.routers.traefik.tls.domains[0].sans=*.ooo.digitalcraft.cl'
+        - 'traefik.docker.network=proxy'
+      # logging:
+      #   driver: json-file
+      #   options:
+      #     'max-size': '10m'
+      #     'max-file': '5'
+  whoami:
+    image: "traefik/whoami"
+    # name: "simple-service"
+    networks: 
+      - proxy
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.whoami.rule=Host(`whoami.ooo.digitalcraft.cl`)"
+        - "traefik.http.routers.whoami.entrypoints=web,websecured"
+        - "traefik.http.routers.whoami.tls.certresolver=le"
+        # - 'traefik.http.services.api.loadbalancer.server.port=80'
+        # - "traefik.port=8080"
+    
