@@ -24,9 +24,6 @@ services:
     command: 
       - --api.insecure=true 
       - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      # - "--entrypoints.websecure.address=:443"
-      # - "--certificatesresolvers.le.acme.tlschallenge=true"
       - --api.dashboard=true
       - --serversTransport.insecureSkipVerify=true
       - --api.debug=true
@@ -40,8 +37,6 @@ services:
       - "--certificatesresolvers.le.acme.dnschallenge=true"
       - "--certificatesresolvers.le.acme.httpChallenge=false"
       - "--certificatesresolvers.le.acme.tlsChallenge=false"
-      # - "--certificatesresolvers.le.acme.email=tomasbarrios@gmail.com"
-      # - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
 
       - "--log.level=DEBUG"
       # - "--certificatesresolvers.le.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
@@ -50,16 +45,6 @@ services:
       - "--certificatesresolvers.le.acme.email=info@digitalcraft.cl"
       - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
       - "--certificatesresolvers.le.acme.httpChallenge.entryPoint=web"
-
-      # - "--api.insecure=true"
-      # - "--providers.docker=true"
-      # - "--providers.docker.exposedbydefault=false"
-      # - "--entrypoints.websecure.address=:443"
-      # - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
-      # - "--certificatesresolvers.myresolver.acme.email=postmaster@example.com"
-      # - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-
 
     env_file: ./traefik.env
     # environment:
@@ -85,15 +70,9 @@ services:
         - 'traefik.http.services.api.loadbalancer.server.port=8080'
         - 'traefik.http.routers.traefik.tls.domains[0].main=ooo.digitalcraft.cl'
         - 'traefik.http.routers.traefik.tls.domains[0].sans=*.ooo.digitalcraft.cl'
-        - 'traefik.docker.network=proxy'
-      # logging:
-      #   driver: json-file
-      #   options:
-      #     'max-size': '10m'
-      #     'max-file': '5'
+        # - 'traefik.docker.network=proxy'
   whoami:
     image: "traefik/whoami"
-    # name: "simple-service"
     networks: 
       - proxy
     deploy:
@@ -107,6 +86,6 @@ services:
         - "traefik.http.routers.whoami.rule=Host(`whoami.ooo.digitalcraft.cl`)"
         - "traefik.http.routers.whoami.entrypoints=web,websecured"
         - "traefik.http.routers.whoami.tls.certresolver=le"
-        # - 'traefik.http.services.api.loadbalancer.server.port=80'
-        # - "traefik.port=8080"
+        - 'traefik.http.services.api.loadbalancer.server.port=80'
+
     
