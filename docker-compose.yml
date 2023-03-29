@@ -63,12 +63,8 @@ services:
 
     env_file: ./traefik.env
     # environment:
-    #   # - "AWS_ACCESS_KEY_ID=yourKeyGoesHere"
-    #   # - "AWS_SECRET_ACCESS_KEY=yourSecretGoesHere"
-    #   # CF_API_EMAIL, CF_API_KEY 5 
-    #   # -"CF_ZONE_API_TOKEN"="pS-kz7Ph5SwDLtO5-HIfMvs5CRqBm8SyF8hqKfVd"
-    #    - "CF_DNS_API_TOKEN=tGw3w0m7-O4FTJLwojayJJltZdMJOayTwDwMl_gy"
-    #   # or CF_DNS_API_TOKEN, [CF_ZON
+    #    - "CF_DNS_API_TOKEN=yourKeyGoesHere"
+
     networks: 
       - proxy
     deploy:
