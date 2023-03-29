@@ -4,3 +4,5 @@ traefik.env
 //CF_DNS_API_TOKEN=XXXXX
 
 .DS_Store
+
+letsencrypt/*
